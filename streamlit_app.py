@@ -4,6 +4,7 @@ import tempfile
 import streamlit as st
 from streamlit_chat import message
 from pdfquery import PDFQuery
+import fitz
 
 # Set page title
 st.set_page_config(page_title="ChatWithPDF")
@@ -12,7 +13,7 @@ def display_messages():
     """
     Display chat messages in the Streamlit app.
     """
-    st.subheader("Chat")
+    st.subheader("文档问答 :sunglasses:")
     for i, (msg, is_user) in enumerate(st.session_state["messages"]):
         message(msg, is_user=is_user, key=str(i))
     st.session_state["thinking_spinner"] = st.empty()
@@ -67,9 +68,9 @@ def main():
         else:
             st.session_state["pdfquery"] = None
 
-    st.header("ChatPDF")
+    st.header("ChatWithPDF")
 
-    if st.text_input("OpenAI API Key", value=st.session_state["OPENAI_API_KEY"], key="input_OPENAI_API_KEY", type="password"):
+    if st.text_input("请输入 OpenAI API Key :heartbeat:", value=st.session_state["OPENAI_API_KEY"], key="input_OPENAI_API_KEY", type="password"):
         if (
             len(st.session_state["input_OPENAI_API_KEY"]) > 0
             and st.session_state["input_OPENAI_API_KEY"] != st.session_state["OPENAI_API_KEY"]
@@ -81,8 +82,8 @@ def main():
             st.session_state["user_input"] = ""
             st.session_state["pdfquery"] = PDFQuery(st.session_state["OPENAI_API_KEY"])
 
-    st.subheader("Upload a document")
-    st.file_uploader(
+    st.subheader("上传本地PDF文件	:yum:")
+    pdf_file = st.file_uploader(
         "Upload document",
         type=["pdf"],
         key="file_uploader",
@@ -91,15 +92,45 @@ def main():
         accept_multiple_files=True,
         disabled=not is_openai_api_key_set(),
     )
+    # --------------------------------------------------
+    if len(pdf_file) > 0:
+        import io
+        import numpy as np
+        from PIL import Image
+        # 打开PDF文件
+        pdf_doc = fitz.open(stream=pdf_file)
 
+        # 获取页数
+        num_pages = pdf_doc.page_count
+
+        # 获取页面对象列表
+        pages = pdf_doc.pages()
+        # 创建一个图片列表
+        images = []
+
+        # 遍历每个页面对象
+        for page in pages:
+            # 转换为Pixmap对象
+            pix = page.get_pixmap()
+
+            # 转换为PNG格式的字节数据
+            png_data = pix.getPNGData()
+
+            # 转换为Image对象
+            image = Image.open(io.BytesIO(png_data))
+
+            # 添加到图片列表中
+            images.append(image)
+        # 显示图片列表
+        st.image(images, caption=f"这是一个{num_pages}页的PDF文件", use_column_width=True)
+
+    # --------------------------------------------------
     st.session_state["ingestion_spinner"] = st.empty()
 
     display_messages()
-    st.text_input("Message", key="user_input", disabled=not is_openai_api_key_set(), on_change=process_input)
+    st.text_input("Message :stuck_out_tongue_winking_eye:", key="user_input", disabled=not is_openai_api_key_set(), on_change=process_input)
 
     st.divider()
-    st.markdown("Source code: [Github](https://github.com/ncodepro/pdfchatbot)")
-
 
 if __name__ == "__main__":
     main()
