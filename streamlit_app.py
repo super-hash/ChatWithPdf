@@ -1,10 +1,9 @@
-
+import PyPDF2
 import os
 import tempfile
 import streamlit as st
 from streamlit_chat import message
 from pdfquery import PDFQuery
-import fitz
 
 # Set page title
 st.set_page_config(page_title="ChatWithPDF")
@@ -92,37 +91,39 @@ def main():
         accept_multiple_files=True,
         disabled=not is_openai_api_key_set(),
     )
+    print(type(pdf_file))
+    print(len(pdf_file))
     # --------------------------------------------------
-    if len(pdf_file) > 0:
-        import io
-        import numpy as np
-        from PIL import Image
-        # 打开PDF文件
-        pdf_doc = fitz.open(stream=pdf_file)
 
-        # 获取页数
-        num_pages = pdf_doc.page_count
+    # import io
+    # import numpy as np
+    # from PIL import Image
+    # # 打开PDF文件
+    # pdf_doc = PyPDF2.PdfFileReader(pdf_file)
 
-        # 获取页面对象列表
-        pages = pdf_doc.pages()
-        # 创建一个图片列表
-        images = []
+    # # 获取页数
+    # num_pages = pdf_doc.page_count
 
-        # 遍历每个页面对象
-        for page in pages:
-            # 转换为Pixmap对象
-            pix = page.get_pixmap()
+    # # 获取页面对象列表
+    # pages = pdf_doc.pages()
+    # # 创建一个图片列表
+    # images = []
 
-            # 转换为PNG格式的字节数据
-            png_data = pix.getPNGData()
+    # # 遍历每个页面对象
+    # for page in pages:
+    #     # 转换为Pixmap对象
+    #     pix = page.get_pixmap()
 
-            # 转换为Image对象
-            image = Image.open(io.BytesIO(png_data))
+    #     # 转换为PNG格式的字节数据
+    #     png_data = pix.getPNGData()
 
-            # 添加到图片列表中
-            images.append(image)
-        # 显示图片列表
-        st.image(images, caption=f"这是一个{num_pages}页的PDF文件", use_column_width=True)
+    #     # 转换为Image对象
+    #     image = Image.open(io.BytesIO(png_data))
+
+    #     # 添加到图片列表中
+    #     images.append(image)
+    # # 显示图片列表
+    # st.image(images, caption=f"这是一个{num_pages}页的PDF文件", use_column_width=True)
 
     # --------------------------------------------------
     st.session_state["ingestion_spinner"] = st.empty()
