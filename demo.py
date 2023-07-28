@@ -2,7 +2,6 @@ import gradio as gr
 import os
 import time
 import shutil
-
 import base64
 
 
@@ -51,10 +50,9 @@ cle = lambda :""
 
 with gr.Blocks(title="Chat With Pdf") as demo:
     gr.HTML(title_html)
-        
+    file = gr.File()
     with gr_L1():
         with gr_L2(scale=1.5, elem_id="gpt-chat"):
-            file = gr.File()
             out = gr.Markdown()
         with gr_L2(scale=1, elem_id="gpt-chat"):
             title = gr.Markdown("""<h1><center><strong>文档问答 </strong></center></h1>
