@@ -1,3 +1,4 @@
 gradio
 langchain
 PyPDF2
+langchain

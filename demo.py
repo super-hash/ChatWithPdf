@@ -3,11 +3,14 @@ import os
 import time
 import shutil
 import base64
+from pdfquery import PDFQuery
+
+pquery = PDFQuery()
 
 
-prompt = "请输入信息"
 def openai_create(s):
-    return "hello" + s
+    global pquery
+    return pquery.ask(s)
 
 def chatgpt_clone(input, history, chatbot):
     if input == "":
@@ -38,6 +41,8 @@ def pdf_to_markdown(file_obj):
     file_name = os.path.basename(file_obj.name)
     destination = f'private_upload/{time_tag}/{file_name}'
     shutil.copy(file_obj.name, destination)
+    global pquery
+    pquery.ingest(destination)
     with open(destination, "rb") as f:
         pdf = base64.b64encode(f.read()).decode('utf-8')
     pdf_display = f'<embed src="data:application/pdf;base64,{pdf}" ' \
@@ -59,7 +64,7 @@ with gr.Blocks(title="Chat With Pdf") as demo:
             """, visible=False)
             chatbot = gr.Chatbot(scale=3, height=600, visible=False)
             with gr_L1():
-                message = gr.Textbox(placeholder=prompt, scale=10, visible=False)
+                message = gr.Textbox(placeholder="Input question here.", scale=10, visible=False)
                 state = gr.State([])
                 submit = gr.Button("发送", scale=1, visible=False)
 
