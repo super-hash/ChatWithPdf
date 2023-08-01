@@ -1,4 +1,6 @@
 gradio
 langchain
-PyPDF2
-langchain
+openai
+pypdfium2
+chromadb
+tiktoken

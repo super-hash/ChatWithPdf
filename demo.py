@@ -4,10 +4,13 @@ import time
 import shutil
 import base64
 from pdfquery import PDFQuery
+import pandas as pd
+import docx
 
 pquery = PDFQuery()
 
-
+# os.environ["http_proxy"]="127.0.0.1:7890"
+# os.environ["https_proxy"]="127.0.0.1:7890"
 def openai_create(s):
     global pquery
     return pquery.ask(s)
@@ -25,10 +28,9 @@ def chatgpt_clone(input, history, chatbot):
     return chatbot, history, ""
 
 
-title_html = f"<h1 align=\"center\">Chat With Pdf</h1>"
+title_html = f"<h1 align=\"center\">Chat with Document</h1>"
 
-gr_L1 = lambda: gr.Row().style()
-gr_L2 = lambda scale, elem_id: gr.Column(scale=scale, elem_id=elem_id)
+gr_L = lambda scale, elem_id: gr.Column(scale=scale, elem_id=elem_id)
 
 
 def pdf_to_markdown(file_obj):
@@ -41,13 +43,34 @@ def pdf_to_markdown(file_obj):
     file_name = os.path.basename(file_obj.name)
     destination = f'private_upload/{time_tag}/{file_name}'
     shutil.copy(file_obj.name, destination)
+    document = None
+    print(destination)
+    if file_name.lower().endswith(".md"):
+        display = f'<embed src="data:application/pdf;base64,{document}" ' \
+                    f'width="700" height="800" type="application/pdf">'
+    elif file_name.lower().endswith(".txt"):
+        with open(destination, "r", encoding='utf-8', errors='ignore') as f:
+            display = f.read()
+    elif file_name.lower().endswith(".pdf"):
+        with open(destination, "rb") as f:
+            document = base64.b64encode(f.read()).decode('utf-8')
+        display = f'<embed src="data:application/pdf;base64,{document}" ' \
+                    f'width="700" height="800" type="application/pdf">'
+    elif file_name.lower().endswith(".csv"):
+        df = pd.read_csv(destination, encoding='gbk')
+        display = df.to_html()
+    elif file_name.lower().endswith(".docx"):
+        doc = docx.Document(destination)
+        display = ''
+        for para in doc.paragraphs:
+            display += para.text + '\n'
+    else :
+        df = pd.read_excel(destination)
+        display = df.to_html()
+    
     global pquery
     pquery.ingest(destination)
-    with open(destination, "rb") as f:
-        pdf = base64.b64encode(f.read()).decode('utf-8')
-    pdf_display = f'<embed src="data:application/pdf;base64,{pdf}" ' \
-                    f'width="700" height="800" type="application/pdf">'
-    return [pdf_display, gr.update(visible=False),gr.update(visible=True),gr.update(visible=True),gr.update(visible=True),
+    return [display, gr.update(visible=False),gr.update(visible=True),gr.update(visible=True),gr.update(visible=True),
             gr.update(visible=True),gr.update(visible=True)]
 
 # 清空
@@ -55,15 +78,18 @@ cle = lambda :""
 
 with gr.Blocks(title="Chat With Pdf") as demo:
     gr.HTML(title_html)
-    file = gr.File()
-    with gr_L1():
-        with gr_L2(scale=1.5, elem_id="gpt-chat"):
-            out = gr.Markdown()
-        with gr_L2(scale=1, elem_id="gpt-chat"):
+    file = gr.File(label="添加文件",
+                    file_types=['.txt', '.xlsx', '.docx', '.pdf', ".csv"],
+                    file_count="single",
+                    show_label=False)
+    with  gr.Row():
+        with gr_L(scale=1.5, elem_id="gpt-chat"):
+            out = gr.Markdown(visible=False)
+        with gr_L(scale=1, elem_id="gpt-chat"):
             title = gr.Markdown("""<h1><center><strong>文档问答 </strong></center></h1>
             """, visible=False)
             chatbot = gr.Chatbot(scale=3, height=600, visible=False)
-            with gr_L1():
+            with  gr.Row():
                 message = gr.Textbox(placeholder="Input question here.", scale=10, visible=False)
                 state = gr.State([])
                 submit = gr.Button("发送", scale=1, visible=False)
