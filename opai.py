@@ -1,5 +1,6 @@
 import openai
-openai.api_key = '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'
+""""填入你的openai key"""
+openai.api_key = 'sk-'
 completion = openai.ChatCompletion.create(
    model="gpt-3.5-turbo",
     messages=[
