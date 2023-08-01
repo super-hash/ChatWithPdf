@@ -1,6 +1,7 @@
 import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
+<<<<<<< HEAD
 from langchain.chains.question_answering import load_qa_chain
 # from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
@@ -13,6 +14,18 @@ class PDFQuery:
         os.environ["OPENAI_API_KEY"] = ""
         self.embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
         # self.embeddings = OpenAIEmbeddings()
+=======
+from langchain.document_loaders import PyPDFium2Loader
+from langchain.chains.question_answering import load_qa_chain
+# from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
+
+
+class PDFQuery:
+    def __init__(self):
+        os.environ["OPENAI_API_KEY"] = ""
+        self.embeddings = OpenAIEmbeddings()
+>>>>>>> 2b58dc396b58a93aa07e853e16ea79e7b51c73ce
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
         # self.llm = OpenAI(temperature=0, openai_api_key=openai_api_key)
         self.llm = ChatOpenAI(temperature=0)
@@ -28,6 +41,7 @@ class PDFQuery:
         return response
 
     def ingest(self, file_path: os.PathLike) -> None:
+<<<<<<< HEAD
         docs = load_file(file_path)
         self.db = Chroma.from_documents(docs, self.embeddings).as_retriever()
         # self.chain = load_qa_chain(OpenAI(temperature=0), chain_type="stuff")
@@ -75,3 +89,11 @@ def write_check_file(filepath, docs):
             fout.write(str(i))
             fout.write('\n')
         fout.close()
+=======
+        loader = PyPDFium2Loader(file_path)
+        documents = loader.load()
+        splitted_documents = self.text_splitter.split_documents(documents)
+        self.db = Chroma.from_documents(splitted_documents, self.embeddings).as_retriever()
+        # self.chain = load_qa_chain(OpenAI(temperature=0), chain_type="stuff")
+        self.chain = load_qa_chain(ChatOpenAI(temperature=0), chain_type="stuff")
+>>>>>>> 2b58dc396b58a93aa07e853e16ea79e7b51c73ce
