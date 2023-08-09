@@ -3,8 +3,4 @@ langchain
 openai
 pypdfium2
 chromadb
-<<<<<<< HEAD
 tiktoken
-=======
-tiktoken
->>>>>>> 2b58dc396b58a93aa07e853e16ea79e7b51c73ce

@@ -1,84 +1,85 @@
 import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
-<<<<<<< HEAD
 from langchain.chains.question_answering import load_qa_chain
-# from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.document_loaders import UnstructuredFileLoader, TextLoader, CSVLoader, PyPDFium2Loader,UnstructuredWordDocumentLoader
+from langchain.document_loaders import PyPDFLoader, TextLoader, CSVLoader,UnstructuredWordDocumentLoader
 from textsplitter import ChineseTextSplitter
+import pandas as pd
+from langchain.embeddings.openai import OpenAIEmbeddings
 
-class PDFQuery:
+class DocumentQuery:
     def __init__(self):
-        os.environ["OPENAI_API_KEY"] = ""
-        self.embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
-        # self.embeddings = OpenAIEmbeddings()
-=======
-from langchain.document_loaders import PyPDFium2Loader
-from langchain.chains.question_answering import load_qa_chain
-# from langchain.llms import OpenAI
-from langchain.chat_models import ChatOpenAI
-
-
-class PDFQuery:
-    def __init__(self):
-        os.environ["OPENAI_API_KEY"] = ""
+        os.environ["OPENAI_API_KEY"] = "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"
         self.embeddings = OpenAIEmbeddings()
->>>>>>> 2b58dc396b58a93aa07e853e16ea79e7b51c73ce
-        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
-        # self.llm = OpenAI(temperature=0, openai_api_key=openai_api_key)
-        self.llm = ChatOpenAI(temperature=0)
+        self.llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+
         self.chain = None
         self.db = None
 
+
     def ask(self, question: str) -> str:
         if self.chain is None:
-            response = "Please, add a document."
+            response = "请添加文件."
         else:
+            from langdetect import detect
+            detected_lang = detect(question)
+            print(question)
+            print(detected_lang)
+            if detected_lang == 'zh-cn' or detected_lang == 'ko':
+                detected_lang = "中文"
+            else: detected_lang = "英文"
+            prompt = f'请使用{detected_lang}回答'
             docs = self.db.get_relevant_documents(question)
-            response = self.chain.run(input_documents=docs, question=question)
+            response = self.chain.run(input_documents=docs, question=prompt+question)                         
+
         return response
 
     def ingest(self, file_path: os.PathLike) -> None:
-<<<<<<< HEAD
+        print("begin ingest"+file_path)
         docs = load_file(file_path)
         self.db = Chroma.from_documents(docs, self.embeddings).as_retriever()
-        # self.chain = load_qa_chain(OpenAI(temperature=0), chain_type="stuff")
+        print("end Chroma")
         self.chain = load_qa_chain(self.llm, chain_type="stuff")
+        print("end ingest"+file_path)
+
+
 
 def load_file(filepath, sentence_size=100):
-    if filepath.lower().endswith(".md"):
-        loader = UnstructuredFileLoader(filepath, mode="elements")
-        docs = loader.load()
-    elif filepath.lower().endswith(".txt"):
+
+    if filepath.lower().endswith(".txt"):
         loader = TextLoader(filepath, autodetect_encoding=True)
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".pdf"):
-        loader = PyPDFium2Loader(filepath)
+        print("begin load_file pdf")
+        loader = PyPDFLoader(filepath)
         documents = loader.load()
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=300)
         docs = text_splitter.split_documents(documents)
+        print("end load_file pdf")
     elif filepath.lower().endswith(".csv"):
-        loader = CSVLoader(filepath,encoding='gbk')
+        loader = CSVLoader(filepath)
         docs = loader.load()
-    elif filepath.lower().endswith(".docx"):
+    elif filepath.lower().endswith(".docx"):                                                                                                                        
         loader = UnstructuredWordDocumentLoader(filepath, mode="elements")
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(textsplitter)
     elif filepath.lower().endswith(".xlsx"):
-        loader = UnstructuredFileLoader(filepath, mode="elements")
-        textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
-        docs = loader.load_and_split(textsplitter)
-    else :
-        raise "不支持此格式文件"
+        xlsx_to_csv_pd(filepath[:-5])
+        filepath = filepath[:-5] + '.csv'
+        loader = CSVLoader(filepath)
+        docs = loader.load()
+    print('1111111111')
     write_check_file(filepath, docs)
     return docs
 
 
 def write_check_file(filepath, docs):
-    folder_path = os.path.join(os.path.dirname(filepath), "tmp_files")
+    print("begin write_check_file"+filepath)
+    import time
+    time_tag = time.strftime("%Y-%m-%d-%H", time.localtime())
+    folder_path = os.path.join(os.path.dirname(filepath), time_tag+"tmp_files")
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     fp = os.path.join(folder_path, 'load_file.txt')
@@ -89,11 +90,9 @@ def write_check_file(filepath, docs):
             fout.write(str(i))
             fout.write('\n')
         fout.close()
-=======
-        loader = PyPDFium2Loader(file_path)
-        documents = loader.load()
-        splitted_documents = self.text_splitter.split_documents(documents)
-        self.db = Chroma.from_documents(splitted_documents, self.embeddings).as_retriever()
-        # self.chain = load_qa_chain(OpenAI(temperature=0), chain_type="stuff")
-        self.chain = load_qa_chain(ChatOpenAI(temperature=0), chain_type="stuff")
->>>>>>> 2b58dc396b58a93aa07e853e16ea79e7b51c73ce
+    print("end write_check_file"+filepath)
+
+
+def xlsx_to_csv_pd(filename):
+    data_xls = pd.read_excel(filename+'.xlsx', index_col=0, engine='openpyxl')
+    data_xls.to_csv(filename+'.csv', encoding='utf-8')
