@@ -10,10 +10,20 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 
 class DocumentQuery:
     def __init__(self):
+<<<<<<< HEAD
         os.environ["OPENAI_API_KEY"] = "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"
         self.embeddings = OpenAIEmbeddings()
         self.llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
 
+=======
+        """填入你的openai key"""
+        os.environ["OPENAI_API_KEY"] = ""
+        self.embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+        # self.embeddings = OpenAIEmbeddings()
+        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+        # self.llm = OpenAI(temperature=0, openai_api_key=openai_api_key)
+        self.llm = ChatOpenAI(temperature=0)
+>>>>>>> ad229d08d0be3364ed2621d7348417ca45408c8c
         self.chain = None
         self.db = None
 
@@ -90,9 +100,12 @@ def write_check_file(filepath, docs):
             fout.write(str(i))
             fout.write('\n')
         fout.close()
+<<<<<<< HEAD
     print("end write_check_file"+filepath)
 
 
 def xlsx_to_csv_pd(filename):
     data_xls = pd.read_excel(filename+'.xlsx', index_col=0, engine='openpyxl')
     data_xls.to_csv(filename+'.csv', encoding='utf-8')
+=======
+>>>>>>> ad229d08d0be3364ed2621d7348417ca45408c8c
