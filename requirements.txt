@@ -5,3 +5,4 @@ pypdfium2
 chromadb
 tiktoken
 langdetect
+python-docx
